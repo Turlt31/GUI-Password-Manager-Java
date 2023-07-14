@@ -11,13 +11,13 @@ Encryption:
 Features:
   * Multiple Accounts
 
-It does not have all the same features as the python version yet <br>
-But i am working on them
+It does not have all the same features as the Python version yet <br>
+But I am working on them
 
 <br>
-Curectly only passwords and cards screen works
+Currently, only passwords and cards screen works
 
-Notes and Settings are not implamented yet
+Notes and Settings are not implemented yet
 
 
 <br>
