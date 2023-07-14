@@ -4,6 +4,9 @@ import java.awt.*;
 
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Apps {
 
@@ -915,7 +918,137 @@ public class Apps {
     }
 
 
-    public static void settings(String user, JPanel controlsP, JPanel displayP){
+    public static void changePassword(String user, JPanel displayP) {
+        displayP.removeAll();
+        displayP.revalidate();
+        displayP.repaint();
+
+        JTextField pass1F = new JTextField();
+        JTextField pass2F = new JTextField();
+
+        Runnable save = () -> {
+            String passwordOLD = pass1F.getText();
+            String passwordNEW = pass2F.getText();
+            String fileName = "src\\files\\logins.txt";
+
+            try {
+                File inputFile = new File(fileName);
+                File tempFile = new File("temp.txt");
+
+                BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.equals(Cryption.encryptMPSW(passwordOLD)+","+user)) { writer.write(Cryption.encryptMPSW(passwordNEW)+","+user); }
+                    else { writer.write(line); }
+                    writer.newLine();
+                }
+
+                writer.close();
+                reader.close();
+
+                boolean isDeleted = inputFile.delete();
+                boolean isRenamed = tempFile.renameTo(inputFile);
+
+            } catch (IOException e) { e.printStackTrace(); }
+        };
+
+        JLabel pass1L = new JLabel("Old password");
+        pass1L.setBounds(10, 5, 200, 50);
+        pass1L.setFont(new Font("Arial", Font.PLAIN, 30));
+        displayP.add(pass1L);
+
+        pass1F.setBounds(215, 15, 210, 35);
+        pass1F.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(pass1F);
+
+        JLabel pass2L = new JLabel("New password");
+        pass2L.setBounds(10, 45, 200, 50);
+        pass2L.setFont(new Font("Arial", Font.PLAIN, 30));
+        displayP.add(pass2L);
+
+        pass2F.setBounds(215, 55, 210, 35);
+        pass2F.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(pass2F);
+
+        JButton saveB = new JButton("Change password");
+        saveB.setBounds(10, 100, 250, 40);
+        saveB.setFont(new Font("Arial", Font.PLAIN, 24));
+        displayP.add(saveB);
+
+        ActionListener saveListener = e -> save.run();
+        saveB.addActionListener(saveListener);
+    }
+    public static void deleteAccount(String user, JPanel displayP) {
+        displayP.removeAll();
+        displayP.revalidate();
+        displayP.repaint();
+
+        JTextField passF = new JTextField();
+
+        Runnable delete = () -> {
+            String fileName = "src\\files\\logins.txt";
+            String password = passF.getText();
+            password = Cryption.encryptMPSW(password);
+
+            try {
+                File inputFile = new File(fileName);
+                File tempFile = new File("temp.txt");
+
+                BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.equals(password+","+user)) { continue; }
+                    else { writer.write(line); writer.newLine(); }
+                }
+                writer.close();
+                reader.close();
+
+                boolean isDeleted = inputFile.delete();
+                boolean isRenamed = tempFile.renameTo(inputFile);
+
+                String folderPath = "src\\files\\"+user;
+                File folder = new File(folderPath);
+                if (folder.isDirectory()) {
+                    File[] files = folder.listFiles();
+                    if (files != null) {
+                        for (File file : files) { file.delete(); }
+                    }
+                }
+                folder.delete();
+            } catch (IOException e) { e.printStackTrace(); }
+        };
+
+        JLabel label = new JLabel("Password");
+        label.setBounds(10, 5, 230, 50);
+        label.setFont(new Font("Arial", Font.PLAIN, 30));
+        displayP.add(label);
+
+        passF.setBounds(155, 15, 210, 35);
+        passF.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(passF);
+
+        JButton delB = new JButton("Delete Account");
+        delB.setBounds(10, 70, 250, 40);
+        delB.setFont(new Font("Arial", Font.PLAIN, 24));
+        displayP.add(delB);
+
+        ActionListener delListener = e -> delete.run();
+        delB.addActionListener(delListener);
+
+    }
+    public static void twoFA(String user, JPanel displayP) {
+        System.out.println("Two factor-authentication");
+    }
+
+    public static void idkYet(String user, JPanel displayP) {
+        System.out.println("Idk yet");
+    }
+
+    public static void settings(String user, JPanel controlsP, JPanel displayP) {
         controlsP.removeAll();
         controlsP.revalidate();
         controlsP.repaint();
@@ -926,11 +1059,43 @@ public class Apps {
 
 
         JLabel label = new JLabel("Settings");
-        label.setBounds(355, 10, 150, 100);
+        label.setBounds(415, 10, 150, 50);
         label.setFont(new Font("Arial", Font.PLAIN, 40));
-        label.setForeground(Color.white);
         controlsP.add(label);
 
+        JButton changePswB = new JButton("Change Password");
+        changePswB.setBounds(10, 10, 230, 50);
+        changePswB.setFont(new Font("Arial", Font.PLAIN, 23));
+        controlsP.add(changePswB);
 
+        ActionListener changePswListener = e -> changePassword(user, displayP);
+        changePswB.addActionListener(changePswListener);
+
+
+        JButton deleteAccB = new JButton("Delete Account");
+        deleteAccB.setBounds(10, 70, 230, 50);
+        deleteAccB.setFont(new Font("Arial", Font.PLAIN, 23));
+        controlsP.add(deleteAccB);
+
+        ActionListener deleteAccListener = e -> deleteAccount(user, displayP);
+        deleteAccB.addActionListener(deleteAccListener);
+
+
+        JButton twoFAB = new JButton("2 FA");
+        twoFAB.setBounds(760, 10, 230, 50);
+        twoFAB.setFont(new Font("Arial", Font.PLAIN, 23));
+        controlsP.add(twoFAB);
+
+        ActionListener twoFAListener = e -> twoFA(user, displayP);
+        twoFAB.addActionListener(twoFAListener);
+
+
+        JButton idkYetB = new JButton("IDK YET");
+        idkYetB.setBounds(760, 70, 230, 50);
+        idkYetB.setFont(new Font("Arial", Font.PLAIN, 23));
+        controlsP.add(idkYetB);
+
+        ActionListener idkYetListener = e -> idkYet(user, displayP);
+        idkYetB.addActionListener(idkYetListener);
     }
 }
