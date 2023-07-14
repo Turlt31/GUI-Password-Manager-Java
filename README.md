@@ -10,17 +10,12 @@ Encryption:
 
 Features:
   * Multiple Accounts
+  * Two factor-authentication is back
 
-It does not have all the same features as the Python version yet <br>
-But I am working on them
-
-<br>
-Currently, only passwords and cards screen works
-
-Notes and Settings are not implemented yet
-
+Notes are not implemented yet <br>
+Most other features are added
 
 <br>
 If you have any suggestions 
 
-DM me on discord: .turtl3.
+DM me on discord: .turtl3. 
