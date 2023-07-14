@@ -1,15 +1,39 @@
-import javax.swing.*;
-
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.awt.Font;
 import java.awt.*;
-import java.awt.event.ActionListener;
-
 import java.io.BufferedWriter;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.FileWriter;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+import java.security.SecureRandom;
+import java.nio.ByteBuffer;
+import java.time.Instant;
+
+import javax.crypto.spec.SecretKeySpec;
+import javax.imageio.ImageIO;
+import javax.crypto.Mac;
+import javax.swing.*;
+
+import org.apache.commons.codec.binary.Base32;
+
+import org.json.simple.parser.ParseException;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.JSONObject;
+
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.WriterException;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.BarcodeFormat;
 
 public class Main {
     public static JFrame frame = new JFrame();
@@ -195,9 +219,58 @@ public class Main {
         ActionListener logoutListener = e -> cardLayout.show(cardPanel, "login");
         logoutB.addActionListener(logoutListener);
 
-        Apps.password(user, controlPanel, displayPanel, frame);
+        Apps.settings(user, controlPanel, displayPanel);
     }
 
+    private static final int DIGITS = 6;
+    private static final int TIME_STEP_SECONDS = 30;
+
+    public static String generateOTP(byte[] keyBytes, long otpTime) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(0, otpTime);
+
+        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "HmacSHA1");
+        try {
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(keySpec);
+            byte[] hash = mac.doFinal(buffer.array());
+
+            int offset = hash[hash.length - 1] & 0xF;
+            int truncatedHash = (hash[offset] & 0x7F) << 24
+                    | (hash[offset + 1] & 0xFF) << 16
+                    | (hash[offset + 2] & 0xFF) << 8
+                    | (hash[offset + 3] & 0xFF);
+
+            int otp = truncatedHash % (int) Math.pow(10, DIGITS);
+            return String.format("%0" + DIGITS + "d", otp);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public static String create2FA(String user) {
+        byte[] buffer = new byte[20];
+        new SecureRandom().nextBytes(buffer);
+
+        Base32 base32 = new Base32();
+        String key =  base32.encodeToString(buffer);
+
+        String format = "otpauth://totp/%s:%s?secret=%s&issuer=%s";
+        String qrCodeURL = String.format(format, "PM", user, key, "PM");
+        String filePath = "src\\files\\"+user+"\\config\\qrCode.png";
+
+        try {
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(qrCodeURL, BarcodeFormat.QR_CODE, 350, 350, hints);
+
+            BufferedImage image = MatrixToImageWriter.toBufferedImage(bitMatrix);
+            ImageIO.write(image, "PNG", new File(filePath));
+
+        } catch (IOException e) { e.printStackTrace(); } catch (WriterException e) { throw new RuntimeException(e); }
+
+        return key;
+    }
     public static void login(String username, String password) {
         String fileName = "src\\files\\logins.txt";
 
@@ -207,15 +280,70 @@ public class Main {
                 String[] parts = line.split(",");
 
                 if (Cryption.encryptMPSW(password).equals(parts[0]) && username.equals(parts[1]) ) {
-                    mainScreen(username);
-                    System.out.println("Logged in with: "+username+" | "+password);
-                    cardLayout.show(cardPanel, "main");
+                    String filePath = "src\\files\\"+username+"\\config\\otp.json";
+                    JSONParser jsonParser = new JSONParser();
+                    boolean active;
+                    String key;
+                    try (FileReader fileReader = new FileReader(filePath)) {
+                        Object obj = jsonParser.parse(fileReader);
+                        JSONObject jsonObject = (JSONObject) obj;
+                        active = (boolean) jsonObject.get("active");
+                        key = (String) jsonObject.get("key");
+                    }
+                    catch (ParseException e) { throw new RuntimeException(e); }
+
+                    if (active) {
+                        JDialog TFATopLevel = new JDialog(frame);
+                        TFATopLevel.setSize(500, 200);
+                        TFATopLevel.setTitle("Two Factor-Authentication");
+                        TFATopLevel.setVisible(true);
+                        TFATopLevel.setResizable(false);
+
+                        JTextField codeF = new JTextField();
+
+                        Runnable checkCode = () -> {
+                            long timeWindow = Instant.now().getEpochSecond() / TIME_STEP_SECONDS;
+                            byte[] keyBytes = new Base32().decode(key);
+
+                            for (int i = -1; i <= 1; i++) {
+                                long otpTime = timeWindow + i;
+                                String otp = generateOTP(keyBytes, otpTime);
+                                if (codeF.getText().equals(otp)) {
+                                    TFATopLevel.dispose();
+                                    mainScreen(username); cardLayout.show(cardPanel, "main");
+                                }
+                            }
+                        };
+
+                        JLabel label1 = new JLabel("2 Factor-Authentication");
+                        label1.setFont(new Font("Arial", Font.PLAIN, 30));
+                        label1.setBounds(90, 10, 330, 40);
+                        TFATopLevel.add(label1);
+
+                        JLabel label2 = new JLabel("Code");
+                        label2.setBounds(100, 65, 100, 40);
+                        label2.setFont(new Font("Arial", Font.PLAIN, 26));
+                        TFATopLevel.add(label2);
+
+                        codeF.setBounds(180, 70, 180, 35);
+                        codeF.setFont(new Font("Arial", Font.PLAIN, 25));
+                        codeF.setHorizontalAlignment(JTextField.CENTER);
+                        TFATopLevel.add(codeF);
+
+                        JButton checkB = new JButton("Authenticate");
+                        checkB.setBounds(90, 115, 280, 35);
+                        checkB.setFont(new Font("Arial", Font.PLAIN, 25));
+                        TFATopLevel.add(checkB);
+
+                        ActionListener checkListener = e -> checkCode.run();
+                        checkB.addActionListener(checkListener);
+
+
+                    }
+                    else { mainScreen(username); cardLayout.show(cardPanel, "main"); }
                 }
             }
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + fileName);
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
     public static void register(String username, String password) {
         String fileName = "src\\files\\logins.txt";
@@ -223,26 +351,27 @@ public class Main {
         String content = Cryption.encryptMPSW(password)+","+username;
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-            writer.write(content);
-            writer.newLine();
-            System.out.println("Account created: " + username + " | " + password);
-        } catch (IOException e) {
-            System.out.println("Account creation failed");
-            e.printStackTrace();
-        }
+            writer.write(content); writer.newLine();
+        } catch (IOException e) { e.printStackTrace(); }
 
         File directory = new File(dirName);
         boolean isDirCreated = directory.mkdir();
         if (isDirCreated) {
             try {
+                File dir = new File(dirName+"\\config");
+                dir.mkdir();
+
                 File file1 = new File(directory, "passwords.txt");
-                boolean isFile1Created = file1.createNewFile();
+                file1.createNewFile();
 
                 File file2 = new File(directory, "cards.txt");
-                boolean isFile2Created = file2.createNewFile();
+                file2.createNewFile();
 
-                File file3 = new File(directory, "key.key");
-                boolean isFile3Created = file3.createNewFile();
+                File file3 = new File(directory+"\\config", "key.key");
+                file3.createNewFile();
+
+                File file4 = new File(directory+"\\config", "otp.json");
+                file4.createNewFile();
 
                 Cryption.makeKey(username);
 
@@ -252,17 +381,25 @@ public class Main {
             }
 
         }
+
+        String otpKey = create2FA(username);
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("active", false);
+        jsonObject.put("key", otpKey);
+
+        try (FileWriter fileWriter = new FileWriter("src\\files\\"+username+"\\config\\otp.json")) {
+            fileWriter.write(jsonObject.toJSONString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
-        ImageIcon icon = new ImageIcon("src/icon/pwm.ico");
-        Image image = icon.getImage();
-
         frame.setSize(1266, 668);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setTitle("Password manager");
         frame.setResizable(false);
-        frame.setIconImage(image);
 
         mainPanel.setBackground(Color.darkGray);
         loginPanel.setBackground(Color.darkGray);
@@ -284,7 +421,6 @@ public class Main {
         //mainScreen("a");
 
         frame.add(cardPanel);
-
         frame.setVisible(true);
     }
 }

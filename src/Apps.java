@@ -1,12 +1,15 @@
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import javax.swing.ImageIcon;
 import javax.swing.*;
 
 import java.awt.*;
 
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 public class Apps {
 
@@ -1041,9 +1044,83 @@ public class Apps {
 
     }
     public static void twoFA(String user, JPanel displayP) {
-        System.out.println("Two factor-authentication");
-    }
+        displayP.removeAll();
+        displayP.revalidate();
+        displayP.repaint();
 
+        String filePath = "src\\files\\"+user+"\\config\\otp.json";
+        JSONParser jsonParser = new JSONParser();
+        boolean active;
+        String key;
+        try (FileReader fileReader = new FileReader(filePath)) {
+            Object obj = jsonParser.parse(fileReader);
+            JSONObject jsonObject = (JSONObject) obj;
+            active = (boolean) jsonObject.get("active");
+            key = (String) jsonObject.get("key");
+        }
+        catch (ParseException | FileNotFoundException e) { throw new RuntimeException(e); } catch (IOException e) { throw new RuntimeException(e); }
+
+        JButton TFAOnOff = new JButton();
+
+        Runnable setButton = () -> {
+            if (active) { TFAOnOff.setText("On"); }
+            else { TFAOnOff.setText("Off"); }
+        };
+        Runnable turnOnOffTFA = () -> {
+            boolean active2;
+            try (FileReader fileReader = new FileReader(filePath)) {
+                Object obj = jsonParser.parse(fileReader);
+                JSONObject jsonObject = (JSONObject) obj;
+                active2 = (boolean) jsonObject.get("active");
+            }
+            catch (ParseException | FileNotFoundException e) { throw new RuntimeException(e); } catch (IOException e) { throw new RuntimeException(e); }
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("active", !active2);
+            jsonObject.put("key", key);
+
+            try (FileWriter fileWriter = new FileWriter("src\\files\\"+user+"\\config\\otp.json")) {
+                fileWriter.write(jsonObject.toJSONString());
+            } catch (IOException e) { e.printStackTrace(); }
+
+            if (active2) { TFAOnOff.setText("Off"); }
+            else { TFAOnOff.setText("On"); }
+        };
+
+        JLabel label1 = new JLabel("Two Factor-Authentication");
+        label1.setBounds(5, 10, 350, 40);
+        label1.setFont(new Font("Arial", Font.PLAIN, 28));
+        displayP.add(label1);
+
+        TFAOnOff.setBounds(350, 15, 80, 35);
+        TFAOnOff.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(TFAOnOff);
+
+        JLabel label2 = new JLabel("Enter this code in to your Authenticator app");
+        label2.setBounds(10, 100, 550, 40);
+        label2.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(label2);
+
+        JLabel label3 = new JLabel(key);
+        label3.setBounds(5, 130, 550, 40);
+        label3.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(label3);
+
+        JLabel label4 = new JLabel("Or this the QR code");
+        label4.setBounds(10, 165, 550, 40);
+        label4.setFont(new Font("Arial", Font.PLAIN, 25));
+        displayP.add(label4);
+
+        ImageIcon imageIcon = new ImageIcon("src\\files\\"+user+"\\config\\qrCode.png");
+        JLabel qrCodeImg = new JLabel(imageIcon);
+        qrCodeImg.setBounds(5, 210, 275, 275);
+        displayP.add(qrCodeImg);
+
+        ActionListener TFAOnOffListener = e -> turnOnOffTFA.run();
+        TFAOnOff.addActionListener(TFAOnOffListener);
+
+        setButton.run();
+    }
     public static void idkYet(String user, JPanel displayP) {
         System.out.println("Idk yet");
     }
