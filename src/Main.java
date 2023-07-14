@@ -156,8 +156,6 @@ public class Main {
         registerB.addActionListener(registerListener);
     }
     public static void mainScreen(String user) {
-        //cardLayout.show(cardPanel, "main");
-
         mainPanel.removeAll();
         mainPanel.revalidate();
         mainPanel.repaint();
@@ -219,7 +217,7 @@ public class Main {
         ActionListener logoutListener = e -> cardLayout.show(cardPanel, "login");
         logoutB.addActionListener(logoutListener);
 
-        Apps.settings(user, controlPanel, displayPanel);
+        Apps.password(user, controlPanel, displayPanel, frame);
     }
 
     private static final int DIGITS = 6;
@@ -417,8 +415,6 @@ public class Main {
 
         loginScreen();
         registerScreen();
-
-        //mainScreen("a");
 
         frame.add(cardPanel);
         frame.setVisible(true);
