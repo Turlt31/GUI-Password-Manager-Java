@@ -209,6 +209,14 @@ public class Main {
         ActionListener cardListener = e -> Apps.card(user, controlPanel, displayPanel, frame);
         cardB.addActionListener(cardListener);
 
+        JButton notesB = new JButton("Notes");
+        notesB.setBounds(10, 250, widthB, heightB);
+        notesB.setFont(new Font("Arial", Font.PLAIN, 25));
+        mainPanel.add(notesB);
+
+        ActionListener noteListener = e -> Apps.notes(user, controlPanel, displayPanel);
+        notesB.addActionListener(noteListener);
+
         JButton settingsB = new JButton("Settings");
         settingsB.setBounds(10, 510, widthB, heightB);
         settingsB.setFont(new Font("Arial", Font.PLAIN, 25));
@@ -364,20 +372,23 @@ public class Main {
         boolean isDirCreated = directory.mkdir();
         if (isDirCreated) {
             try {
-                File dir = new File(dirName+"\\config");
-                dir.mkdir();
-
                 File file1 = new File(directory, "passwords.txt");
                 file1.createNewFile();
 
                 File file2 = new File(directory, "cards.txt");
                 file2.createNewFile();
 
-                File file3 = new File(directory+"\\config", "key.key");
+                File file3 = new File(directory, "notes.txt");
                 file3.createNewFile();
 
-                File file4 = new File(directory+"\\config", "otp.json");
+                File dir = new File(dirName+"\\config");
+                dir.mkdir();
+
+                File file4 = new File(directory+"\\config", "key.key");
                 file4.createNewFile();
+
+                File file5 = new File(directory+"\\config", "otp.json");
+                file5.createNewFile();
 
                 Cryption.makeKey(username);
 

@@ -18,7 +18,7 @@ public class Cryption {
         byte[] keyBytes = new byte[16];
         secureRandom.nextBytes(keyBytes);
 
-        String fileName = "src\\files\\"+user+"\\key.key";
+        String fileName = "src\\files\\"+user+"\\config\\key.key";
         String content = Base64.getEncoder().encodeToString(keyBytes);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
@@ -28,7 +28,7 @@ public class Cryption {
         }
     }
     public static String getKey(String user) {
-        String fileName = "src\\files\\"+user+"\\key.key";
+        String fileName = "src\\files\\"+user+"\\config\\key.key";
         String key = null;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -143,6 +143,34 @@ public class Cryption {
         ccvE = new String(decryptedBytes4, StandardCharsets.UTF_8);
 
         return nameE+","+numE+","+dateE+","+ccvE;
+    }
+
+    public static String encryptNote(String userM, String text) throws Exception {
+        String key = getKey(userM);
+        String textE;
+
+        Cipher cipher = Cipher.getInstance(CIPHER_MODE);
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), ALGORITHM);
+
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(new byte[cipher.getBlockSize()]));
+        byte[] encryptedBytes1 = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
+        textE = Base64.getEncoder().encodeToString(encryptedBytes1);
+
+        return  textE;
+    }
+    public static String decryptNote(String userM, String text) throws Exception {
+        String key = getKey(userM);
+        String textD;
+
+        Cipher cipher = Cipher.getInstance(CIPHER_MODE);
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), ALGORITHM);
+
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(new byte[cipher.getBlockSize()]));
+        byte[] encryptedBytes1 = Base64.getDecoder().decode(text);
+        byte[] decryptedBytes1 = cipher.doFinal(encryptedBytes1);
+        textD = new String(decryptedBytes1, StandardCharsets.UTF_8);
+
+        return textD;
     }
 
     public static String encryptMPSW(String password) {

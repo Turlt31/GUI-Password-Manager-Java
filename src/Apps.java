@@ -69,18 +69,13 @@ public class Apps {
                     JTextField passwordF = new JTextField();
                     passwordF.setFont(new Font("Arial", Font.PLAIN, 20));
                     passwordF.setBounds(741, posY, 250, 50);
-                    passwordF.setText(password.replaceAll(".", "●"));
+                    passwordF.setText(password.replaceAll("\\.", "●"));
                     displayP.add(passwordF);
                 }
                 count++;
                 posY += 50;
             }
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + fileName);
-            e.printStackTrace();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        } catch (IOException e) { e.printStackTrace(); } catch (Exception e) { throw new RuntimeException(e); }
 
         JLabel label = new JLabel("Count: "+(count-1));
         label.setBounds(400, 65, 200, 50);
@@ -112,16 +107,13 @@ public class Apps {
             }
 
 
-            if (site.equals("") || user.equals("") || pass.equals("")) {
-                return;
-            } else {
+            if (site.equals("") || user.equals("") || pass.equals("")) {}
+            else {
                 String fileName = "src\\files\\"+userM+"\\passwords.txt";
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-                    writer.write(content);
-                    writer.newLine();
-                } catch (IOException e) {
-                    System.out.println("Account creation failed");
-                    e.printStackTrace();}
+                    writer.write(content); writer.newLine();
+                }
+                catch (IOException e) { e.printStackTrace(); }
                 updateP(userM, displayP, controlsP);
             }
         };
@@ -205,8 +197,8 @@ public class Apps {
                 writer.close();
                 reader.close();
 
-                boolean isDeleted = inputFile.delete();
-                boolean isRenamed = tempFile.renameTo(inputFile);
+                inputFile.delete();
+                tempFile.renameTo(inputFile);
             } catch (IOException e) {
                 System.out.println("An error occurred while deleting the line from the file.");
                 e.printStackTrace();
@@ -311,8 +303,8 @@ public class Apps {
                 writer.close();
                 reader.close();
 
-                boolean isDeleted = inputFile.delete();
-                boolean isRenamed = tempFile.renameTo(inputFile);
+                inputFile.delete();
+                tempFile.renameTo(inputFile);
             } catch (IOException e) {
                 System.out.println("An error occurred while reading the file: " + fileName);
                 e.printStackTrace();
@@ -522,19 +514,14 @@ public class Apps {
                     JTextField ccvF = new JTextField();
                     ccvF.setFont(new Font("Arial", Font.PLAIN, 25));
                     ccvF.setBounds(850, posY, 140, 50);
-                    ccvF.setText(ccv.replaceAll(".", "●"));
+                    ccvF.setText(ccv.replaceAll("\\.", "●"));
                     displayP.add(ccvF);
                 }
 
                 count++;
                 posY += 50;
             }
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + fileName);
-            e.printStackTrace();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        } catch (IOException e) { e.printStackTrace(); } catch (Exception e) { throw new RuntimeException(e); }
 
         JLabel label = new JLabel("Count: "+(count-1));
         label.setBounds(400, 65, 200, 50);
@@ -564,15 +551,12 @@ public class Apps {
             try { content = Cryption.encryptCRD(userM, name, num, date, ccv); }
             catch (Exception e) { throw new RuntimeException(e); }
 
-            if (name.equals("") || num.equals("") || date.equals("") || ccv.equals("") ) {
-                return;
-            } else {
+            if (name.equals("") || num.equals("") || date.equals("") || ccv.equals("") ) { }
+            else {
                 String fileName = "src\\files\\"+userM+"\\cards.txt";
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-                    writer.write(content);
-                    writer.newLine();
-                } catch (IOException e) {
-                    e.printStackTrace();}
+                    writer.write(content); writer.newLine();
+                } catch (IOException e) { e.printStackTrace(); }
                 updateC(userM, displayP, controlsP);
             }
         };
@@ -665,8 +649,8 @@ public class Apps {
                 writer.close();
                 reader.close();
 
-                boolean isDeleted = inputFile.delete();
-                boolean isRenamed = tempFile.renameTo(inputFile);
+                inputFile.delete();
+                tempFile.renameTo(inputFile);
             } catch (IOException e) {
                 System.out.println("An error occurred while deleting the line from the file.");
                 e.printStackTrace();
@@ -775,8 +759,8 @@ public class Apps {
                 writer.close();
                 reader.close();
 
-                boolean isDeleted = inputFile.delete();
-                boolean isRenamed = tempFile.renameTo(inputFile);
+                inputFile.delete();
+                tempFile.renameTo(inputFile);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -920,6 +904,75 @@ public class Apps {
         showB.addActionListener(showListener);
 
         updateC(user, displayP, controlsP);
+    }
+
+
+    public static void notes(String user, JPanel controlsP, JPanel displayP) {
+        controlsP.removeAll();
+        controlsP.revalidate();
+        controlsP.repaint();
+
+        displayP.removeAll();
+        displayP.revalidate();
+        displayP.repaint();
+
+        JTextArea textArea = new JTextArea();
+
+        Runnable load = () -> {
+            String fileName = "src\\files\\"+user+"\\notes.txt";
+            try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+                StringBuilder content = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(Cryption.decryptNote(user, line)).append("\n");
+                }
+                textArea.setText(content.toString());
+            } catch (Exception e) { throw new RuntimeException(e); }
+
+        };
+        Runnable save = () -> {
+            String textContent = textArea.getText();
+            String filePath = "src\\files\\"+user+"\\notes.txt";
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) { writer.write(Cryption.encryptNote(user, textContent)); }
+            catch (IOException e) { e.printStackTrace(); } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        JLabel label = new JLabel("Notes");
+        label.setBounds(435, 10, 150, 35);
+        label.setFont(new Font("Arial", Font.PLAIN, 40));
+        controlsP.add(label);
+
+        JButton loadB = new JButton("Load");
+        loadB.setBounds(10, 10, 95, 50);
+        loadB.setFont(new Font("Arial", Font.PLAIN, 25));
+        controlsP.add(loadB);
+        ActionListener loadListener = e -> load.run();
+        loadB.addActionListener(loadListener);
+
+        JButton saveB = new JButton("Save");
+        saveB.setBounds(895, 10, 95, 50);
+        saveB.setFont(new Font("Arial", Font.PLAIN, 19));
+        controlsP.add(saveB);
+        ActionListener saveListener = e -> save.run();
+        saveB.addActionListener(saveListener);
+
+        JButton clearB = new JButton("Clear");
+        clearB.setBounds(895, 70, 95, 50);
+        clearB.setFont(new Font("Arial", Font.PLAIN, 19));
+        controlsP.add(clearB);
+        ActionListener clearListener = e -> textArea.setText("");
+        clearB.addActionListener(clearListener);
+
+        textArea.setFont(new Font("Arial", Font.PLAIN, 20));
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setBounds(0, 0, 983, 5000);
+        displayP.add(textArea);
+
+        load.run();
     }
 
 
