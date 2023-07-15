@@ -11,6 +11,7 @@ Encryption:
 Features:
   * Multiple Accounts
   * Two factor-authentication is back
+  * Scrollbar is back (Fits up to 100 accounts or cards on the screeen)
 
 Notes are not implemented yet <br>
 Most other features are added
