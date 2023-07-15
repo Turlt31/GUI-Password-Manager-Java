@@ -41,7 +41,7 @@ public class Apps {
                 website = parts2[0]; username = parts2[1]; password = parts2[2];
 
                 JTextField countF = new JTextField();
-                countF.setFont(new Font("Arial", Font.BOLD, 30));
+                countF.setFont(new Font("Arial", Font.BOLD, 28));
                 countF.setHorizontalAlignment(JTextField.CENTER);
                 countF.setBounds(0, posY, 40, 50);
                 countF.setText(Integer.toString(count));
@@ -62,13 +62,13 @@ public class Apps {
                 if (showP) {
                     JTextField passwordF = new JTextField();
                     passwordF.setFont(new Font("Arial", Font.PLAIN, 20));
-                    passwordF.setBounds(741, posY, 260, 50);
+                    passwordF.setBounds(741, posY, 250, 50);
                     passwordF.setText(password);
                     displayP.add(passwordF);
                 } else{
                     JTextField passwordF = new JTextField();
                     passwordF.setFont(new Font("Arial", Font.PLAIN, 20));
-                    passwordF.setBounds(741, posY, 260, 50);
+                    passwordF.setBounds(741, posY, 250, 50);
                     passwordF.setText(password.replaceAll(".", "●"));
                     displayP.add(passwordF);
                 }
@@ -479,7 +479,7 @@ public class Apps {
                 displayP.add(dateF);
 
                 JTextField countF = new JTextField();
-                countF.setFont(new Font("Arial", Font.BOLD, 30));
+                countF.setFont(new Font("Arial", Font.BOLD, 28));
                 countF.setHorizontalAlignment(JTextField.CENTER);
                 countF.setBounds(0, posY, 40, 50);
                 countF.setText(Integer.toString(count));
@@ -500,10 +500,11 @@ public class Apps {
 
                     JTextField ccvF = new JTextField();
                     ccvF.setFont(new Font("Arial", Font.PLAIN, 25));
-                    ccvF.setBounds(850, posY, 150, 50);
+                    ccvF.setBounds(850, posY, 140, 50);
                     ccvF.setText(ccv);
                     displayP.add(ccvF);
-                } else{
+                }
+                else{
                     if (num.length() == 19) {
                         JTextField numF = new JTextField();
                         numF.setFont(new Font("Arial", Font.PLAIN, 25));
@@ -520,10 +521,11 @@ public class Apps {
 
                     JTextField ccvF = new JTextField();
                     ccvF.setFont(new Font("Arial", Font.PLAIN, 25));
-                    ccvF.setBounds(850, posY, 150, 50);
+                    ccvF.setBounds(850, posY, 140, 50);
                     ccvF.setText(ccv.replaceAll(".", "●"));
                     displayP.add(ccvF);
                 }
+
                 count++;
                 posY += 50;
             }

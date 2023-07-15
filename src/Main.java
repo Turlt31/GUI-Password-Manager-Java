@@ -48,8 +48,6 @@ public class Main {
         JPanel panel = new JPanel();
         panel.setLayout(null);
         panel.setBackground(Color.white);
-        // (screenWidth-width)/2 | (screenHeight-height)/2
-        // (1266-500)/2 = 383 | (668-250)/2 = 209
         panel.setBounds(383, 209, 500, 250);
         panel.setVisible(true);
 
@@ -103,7 +101,6 @@ public class Main {
         JPanel panel = new JPanel();
         panel.setLayout(null);
         panel.setBackground(Color.white);
-        // (1266-500)/2 = 383 | (668-250)/2 = 209
         panel.setBounds(383, 209, 500, 250);
         panel.setVisible(true);
 
@@ -171,7 +168,18 @@ public class Main {
         controlPanel.setBackground(Color.gray);
 
         JPanel displayPanel = new JPanel();
-        displayPanel.setBounds(250, 130, 1016, 535);
+        displayPanel.setBounds(250, 130, 1016, 5000);
+        displayPanel.setPreferredSize(new Dimension(1016, 5000));
+
+        JScrollPane scrollPane = new JScrollPane(displayPanel);
+        scrollPane.setBounds(250, 130, 1002, 505);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setPreferredSize(new Dimension(1002, 505));
+
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setUnitIncrement(8);
+
 
         controlPanel.setVisible(true);
         displayPanel.setVisible(true);
@@ -180,7 +188,7 @@ public class Main {
         displayPanel.setLayout(null);
 
         mainPanel.add(controlPanel);
-        mainPanel.add(displayPanel);
+        mainPanel.add(scrollPane);
 
         int heightB = 50;
         int widthB = 230;
